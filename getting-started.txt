@@ -1,0 +1,203 @@
+<?php
+/**
+ * Please fix the items marked with "@TODO" in this class
+ *
+ * Follow the https://www.php-fig.org/psr/psr-2/ coding style guide.
+ *
+ * One exception to PSR-2: opening braces MUST always be on the same line
+ * for classes, methods, functions, and control structures
+ */
+class Singleton {
+    const STRING_A = 'stringA';
+    const STRING_B = 'stringB';
+    const RESULT_A = 1;
+    const RESULT_B = 2;
+
+    // @TODO Implement Singleton functionality
+
+    private static $instance;
+
+    private function __construct(){
+
+    }
+
+    public static function getInstance(): Singleton {
+        return (self::$instance)
+            ?: self::$instance = new static();
+    }
+
+
+    /**
+     * Display user name
+     *
+     * @param string $name User-provided name
+     */
+    public function userEcho(string $name): void {
+        // I am validating the string count and also alpha-num check.
+        if (!count($name) || !ctype_alnum($name)) {
+            throw new InvalidArgumentException('You need to provide alphabetical name.');
+        }
+
+        // removing unwanted tag (xss attack)
+        $name = strip_tags($name);
+        // @TODO Validate & sanitize $name
+        echo "The value of 'name' is '{$name}'";
+    }
+
+    /**
+     * Query by user name
+     *
+     * @param string $name User-provided name
+     */
+    public function userQuery(string $name) {
+        // @TODO Validate & sanitize $name
+
+        // since mysql_query is deprecated I am using new version
+        //mysql_query("SELECT * FROM `test` WHERE `name` = '{$name}' LIMIT 1");
+
+        $conn = new mysqli('', '', '', '');
+
+        $state = $conn->prepare('SELECT * FROM `test` WHERE `name` = ? LIMIT 1');
+
+        $state->bind_param('s', $name);
+
+        $state->execute();
+
+    }
+
+    /**
+     * Output the contents of a file
+     *
+     * @param string $path User-provided file path
+     */
+    public function userFile(string $path) {
+        // @TODO Validate & sanitize $path
+        if (file_exists($path)) {
+            readfile(realpath($path));
+        }
+    }
+
+    /**
+     * Nested conditions
+     */
+    public function nestedConditions() {
+        // @TODO Untangle nested conditions
+
+        // another way to rewrite
+        if (!$conditionA) {
+            echo '^A';
+            return;
+        }
+        if (!$conditionB) {
+            echo '^B';
+            return;
+        }
+
+        if (!$conditionC) {
+            echo '^C';
+            return;
+        }
+
+        echo 'ABC';
+
+
+//        if ($conditionA) {
+//            if ($conditionB) {
+//                if ($conditionC) {
+//                    echo 'ABC';
+//                } else {
+//                    echo '^C';
+//                }
+//            } else {
+//                echo '^B';
+//            }
+//        } else {
+//            echo '^A';
+//        }
+    }
+
+    /**
+     * Return statements
+     *
+     * @return boolean
+     */
+    public function returnStatements(): bool {
+        // one way
+        if ($conditionA) {
+            echo 'A';
+            return true;
+        }
+        return false;
+
+        // the other way. and casting return type
+        return ($conditionA) ? print ('A') : false;
+
+        // @TODO Fix
+//        if ($conditionA) {
+//            echo 'A';
+//            return true;
+//        }
+//        else {
+//            return false;
+//        }
+
+    }
+
+    /**
+     * Null coalescing
+     */
+    public function nullCoalescing(): string {
+        return $_GET['name'] ?? $_POST['name'] ?? 'nobody';
+
+        // @TODO Simplify
+//        if (isset($_GET['name'])) {
+//            $name = $_GET['name'];
+//        } elseif (isset($_POST['name'])) {
+//            $name = $_POST['name'];
+//        } else {
+//            $name = 'nobody';
+//        }
+//        return $name;
+    }
+
+    /**
+     * Method chaining
+     */
+    public function methodChained() :self {
+        // @TODO Implement method chaining
+        return $this;
+    }
+
+    /**
+     * Immutables are hard to find
+     */
+    public function checkValue($value) {
+        $result = null;
+
+        // @TODO Make all the immutable values (int, string) in this class
+        // easily replaceable
+        switch ($value) {
+            case self::STRING_A:
+                $result = self::RESULT_A;
+                break;
+
+            case self::STRING_B:
+                $result = self::RESULT_B;
+                break;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Check a string is a 24 hour time
+     *
+     * @return boolean
+     * @example "00:00:00", "23:59:59", "20:15"
+     */
+    public function regexTest(string $time24Hour): bool {
+        // @TODO Implement RegEx and return type; validate & sanitize input
+        return preg_match('/^([0-1]?\d|2[0-3])(?::([0-5]?\d))?(?::([0-5]?\d))?$/', $time24Hour);
+    }
+
+}
