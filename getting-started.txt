@@ -8,22 +8,48 @@
  * for classes, methods, functions, and control structures
  */
 class Singleton {
+    
+    /**
+     * Provide a short description for constant blocks
+     */
     const STRING_A = 'stringA';
     const STRING_B = 'stringB';
     const RESULT_A = 1;
     const RESULT_B = 2;
+    const STRING_A_SHORT = 'A';
+    const STRING_NON_A   = '^A';
+    const STRING_NON_B   = '^B';
+    const STRING_NON_C   = '^C';
+    const STRING_ABC     = 'ABC';
 
-    // @TODO Implement Singleton functionality
+    /**
+     * Describe your methods
+     * Prefix private/protected methods/properties with underscore
+     * 
+     * @var Singleton
+     */
+    private static $_instance = null;
 
-    private static $instance;
-
-    private function __construct(){
+    private function __construct() { // Space between () and {
 
     }
 
+    /**
+     * Always describe your methods
+     * 
+     * @return Singleton
+     */
     public static function getInstance(): Singleton {
-        return (self::$instance)
-            ?: self::$instance = new static();
+        // Although *correct*, using the "Elvis operator" leads to poor readability
+        // It is generally best to also validate for type
+        # return (self::$instance)
+        #     ?: self::$instance = new static();
+        
+        if (null === self::$_instance) {
+            self::$_instance = new self();
+        }
+        
+        return self::$_instance;
     }
 
 
@@ -33,14 +59,19 @@ class Singleton {
      * @param string $name User-provided name
      */
     public function userEcho(string $name): void {
-        // I am validating the string count and also alpha-num check.
-        if (!count($name) || !ctype_alnum($name)) {
+        if (!is_string($name) || !strlen($name)) {
             throw new InvalidArgumentException('You need to provide alphabetical name.');
         }
+        
+        // count() first argument must be a countable or an array
+        // never assume; $name could have Chinese characters
+        # // I am validating the string count and also alpha-num check.
+        # if (!count($name) || !ctype_alnum($name)) {
+        #    throw new InvalidArgumentException('You need to provide alphabetical name.');
+        # }
 
-        // removing unwanted tag (xss attack)
+        // Removing unwanted tag (xss attack)
         $name = strip_tags($name);
-        // @TODO Validate & sanitize $name
         echo "The value of 'name' is '{$name}'";
     }
 
@@ -50,11 +81,6 @@ class Singleton {
      * @param string $name User-provided name
      */
     public function userQuery(string $name) {
-        // @TODO Validate & sanitize $name
-
-        // since mysql_query is deprecated I am using new version
-        //mysql_query("SELECT * FROM `test` WHERE `name` = '{$name}' LIMIT 1");
-
         $conn = new mysqli('', '', '', '');
 
         $state = $conn->prepare('SELECT * FROM `test` WHERE `name` = ? LIMIT 1');
@@ -62,7 +88,6 @@ class Singleton {
         $state->bind_param('s', $name);
 
         $state->execute();
-
     }
 
     /**
@@ -71,49 +96,54 @@ class Singleton {
      * @param string $path User-provided file path
      */
     public function userFile(string $path) {
-        // @TODO Validate & sanitize $path
-        if (file_exists($path)) {
-            readfile(realpath($path));
+        // User paths are relative to this root
+        $root = '/real/path/to/files';
+
+        // The main point is to never allow users to perform directory traversal
+        // Special characters like "." and ".." and direct root access should be forbidden
+        if (!is_string($path) || !strlen($path)) {
+            throw new Exception('No file path provided');
         }
+        
+        // Validate relative path, file name and extension
+        if (!preg_match('%^(?:allowed_path_a|allowed_path_b)\/\w+\.(?:ext|png|jpe?g)$%i', $path)) {
+            throw new Exception('Invalid file path');
+        }
+
+        // File not found
+        if (!is_file("$root/$path")) {
+            throw new Exception('File not found');
+        }
+
+        // No need to assume headers
+        readfile("$root/$path");
+        // No need to assume the script ends here
     }
 
     /**
      * Nested conditions
      */
     public function nestedConditions() {
-        // @TODO Untangle nested conditions
+        // Don't change return type; max. 1 return per function/method
+        // Don't introduce new constants
+        do {
+            if (!$conditionA) {
+                echo self::STRING_NON_A;
+                break;
+            }
 
-        // another way to rewrite
-        if (!$conditionA) {
-            echo '^A';
-            return;
-        }
-        if (!$conditionB) {
-            echo '^B';
-            return;
-        }
+            if (!$conditionB) {
+                echo self::STRING_NON_B;
+                break;
+            }
 
-        if (!$conditionC) {
-            echo '^C';
-            return;
-        }
+            if (!$conditionC) {
+                echo self::STRING_NON_C;
+                break;
+            }
 
-        echo 'ABC';
-
-
-//        if ($conditionA) {
-//            if ($conditionB) {
-//                if ($conditionC) {
-//                    echo 'ABC';
-//                } else {
-//                    echo '^C';
-//                }
-//            } else {
-//                echo '^B';
-//            }
-//        } else {
-//            echo '^A';
-//        }
+            echo self::STRING_ABC;
+        } while(false);
     }
 
     /**
@@ -122,25 +152,24 @@ class Singleton {
      * @return boolean
      */
     public function returnStatements(): bool {
-        // one way
+        // Avoid multiple returns        
+        # if ($conditionA) {
+        #     echo 'A';
+        #     return true;
+        # }
+        # return false;
+
+        # return ($conditionA) 
+        // Print returns integer, not boolean
+        #    ? print ('A') 
+        #    : false;
+
         if ($conditionA) {
-            echo 'A';
-            return true;
+            echo self::STRING_A_SHORT;
         }
-        return false;
 
-        // the other way. and casting return type
-        return ($conditionA) ? print ('A') : false;
-
-        // @TODO Fix
-//        if ($conditionA) {
-//            echo 'A';
-//            return true;
-//        }
-//        else {
-//            return false;
-//        }
-
+        // Implicit boolean conversion
+        return !!$conditionA;
     }
 
     /**
@@ -148,23 +177,12 @@ class Singleton {
      */
     public function nullCoalescing(): string {
         return $_GET['name'] ?? $_POST['name'] ?? 'nobody';
-
-        // @TODO Simplify
-//        if (isset($_GET['name'])) {
-//            $name = $_GET['name'];
-//        } elseif (isset($_POST['name'])) {
-//            $name = $_POST['name'];
-//        } else {
-//            $name = 'nobody';
-//        }
-//        return $name;
     }
 
     /**
      * Method chaining
      */
     public function methodChained() :self {
-        // @TODO Implement method chaining
         return $this;
     }
 
@@ -174,7 +192,7 @@ class Singleton {
     public function checkValue($value) {
         $result = null;
 
-        // @TODO Make all the immutable values (int, string) in this class
+        // Make all the immutable values (int, string) in this class
         // easily replaceable
         switch ($value) {
             case self::STRING_A:
@@ -196,8 +214,16 @@ class Singleton {
      * @example "00:00:00", "23:59:59", "20:15"
      */
     public function regexTest(string $time24Hour): bool {
-        // @TODO Implement RegEx and return type; validate & sanitize input
-        return preg_match('/^([0-1]?\d|2[0-3])(?::([0-5]?\d))?(?::([0-5]?\d))?$/', $time24Hour);
+        // This RegEx matches the following invalid hour formats: 
+        // 0
+        // 0:1
+        // 0:1:2
+        # return preg_match('/^([0-1]?\d|2[0-3])(?::([0-5]?\d))?(?::([0-5]?\d))?$/', $time24Hour);
+        
+        // 0 left padding - so [01]\d instead of [01]?\d (02:00 instead of 2:00)
+        // DRY - don't repeat yourself, the 00-59 minute/second block can appear once or twice
+        // Don't user capturing blocks if you don't need them - (?:) instead of ()
+        // preg_match returns 0,1 or false; expected return value is boolean
+        return !!preg_match('/^(?:[01]\d|2[0-3])(?:\:[0-5]\d){1,2}$/', $time24Hour);
     }
-
 }
